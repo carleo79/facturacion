@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+from decouple import config, Csv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,12 +21,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-=x1yh$6ju%_*9pi7v5333qcdk=yvjlt)2a761%wrj66v-mq2vm'
+SECRET_KEY = config('SECRET_KEY', default='django-insecure-=x1yh$6ju%_*9pi7v5333qcdk=yvjlt)2a761%wrj66v-mq2vm')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=Csv())
 
 
 # Application definition
@@ -84,11 +85,11 @@ WSGI_APPLICATION = 'facturacion_system.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'facturacion',
-        'USER': 'admin_facturacion',
-        'PASSWORD': '93412717',
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'NAME': config('DATABASE_NAME', default='facturacion'),
+        'USER': config('DATABASE_USER', default='admin_facturacion'),
+        'PASSWORD': config('DATABASE_PASSWORD', default='93412717'),
+        'HOST': config('DATABASE_HOST', default='localhost'),
+        'PORT': config('DATABASE_PORT', default='5432'),
     }
 }
 
@@ -128,6 +129,11 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# Media files
+MEDIA_URL = 'media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
