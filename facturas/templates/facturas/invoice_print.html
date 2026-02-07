@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Factura {{ object.number }}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root { --fg:#111; --muted:#666; --bd:#ddd; --accent:#0b5; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; color: var(--fg); margin: 24px; }
+    .header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px; }
+    .brand { font-weight:700; font-size:20px; }
+    .meta { text-align:right; }
+    .grid { display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:16px; }
+    .card { border:1px solid var(--bd); padding:12px; border-radius:6px; }
+    table { width:100%; border-collapse: collapse; }
+    th, td { border:1px solid var(--bd); padding:8px; }
+    th { background:#f7f7f7; text-align:left; }
+    tfoot td { font-weight:600; }
+    .right { text-align:right; }
+    .muted { color: var(--muted); font-size:12px; }
+    @media print {
+      body { margin: 0; }
+      .no-print { display:none; }
+      @page { size: A4; margin: 14mm; }
+    }
+  </style>
+  <script>
+    function doPrint(){ window.print(); }
+  </script>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <div class="brand">Sistema de Facturación</div>
+      <div class="muted">Documento no fiscal</div>
+    </div>
+    <div class="meta">
+      <div><strong>Factura:</strong> {{ object.number }}</div>
+      <div><strong>Fecha:</strong> {{ object.date|date:'Y-m-d H:i' }}</div>
+      <div><strong>Estado:</strong> {{ object.get_status_display }}</div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <div style="font-weight:600; margin-bottom:6px;">Cliente</div>
+      <div>{{ object.customer.nombre }}</div>
+      <div class="muted">{{ object.customer.codigo }} · {{ object.customer.ruc_dni }}</div>
+      <div class="muted">{{ object.customer.direccion }}</div>
+    </div>
+    <div class="card">
+      <div style="font-weight:600; margin-bottom:6px;">Detalles</div>
+      <div><strong>Bodega:</strong> {{ object.warehouse }}</div>
+      <div><strong>Moneda:</strong> {{ object.currency }}</div>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>SKU</th>
+        <th>Descripción</th>
+        <th class="right">Cant.</th>
+        <th>Unidad</th>
+        <th class="right">Precio</th>
+        <th class="right">Desc.</th>
+        <th class="right">Importe</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for line in object.line_items.all %}
+      <tr>
+        <td>{{ line.sku }}</td>
+        <td>{{ line.name }}{% if line.presentation_name %} — {{ line.presentation_name }}{% endif %}</td>
+        <td class="right">{{ line.quantity }}</td>
+        <td>{{ line.get_unit_of_measure_display }}</td>
+        <td class="right">{{ line.unit_price }}</td>
+        <td class="right">{{ line.discount_amount }}</td>
+        <td class="right">{{ line.total }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="7" class="muted">No hay ítems.</td></tr>
+      {% endfor %}
+    </tbody>
+    <tfoot>
+      <tr>
+        <td colspan="6" class="right">Subtotal</td>
+        <td class="right">{{ object.subtotal }}</td>
+      </tr>
+      <tr>
+        <td colspan="6" class="right">Descuento</td>
+        <td class="right">{{ object.total_discount }}</td>
+      </tr>
+      <tr>
+        <td colspan="6" class="right">Impuestos</td>
+        <td class="right">{{ object.total_tax }}</td>
+      </tr>
+      <tr>
+        <td colspan="6" class="right">Total</td>
+        <td class="right">{{ object.total }}</td>
+      </tr>
+    </tfoot>
+  </table>
+
+  {% if object.notes %}
+  <p class="muted" style="margin-top:12px;"><strong>Notas:</strong> {{ object.notes }}</p>
+  {% endif %}
+
+  <div class="no-print" style="margin-top:16px; display:flex; gap:8px;">
+    <a href="javascript:doPrint()" style="padding:8px 12px; background:#0b5; color:#fff; text-decoration:none; border-radius:4px;">Imprimir</a>
+    <a href="{% url 'facturas:list' %}" style="padding:8px 12px; background:#777; color:#fff; text-decoration:none; border-radius:4px;">Volver</a>
+  </div>
+</body>
+</html>
+
+

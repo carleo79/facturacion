@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Facturas</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 24px; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ddd; padding: 8px; }
+    th { background: #f5f5f5; text-align: left; }
+    a.button { display: inline-block; padding: 8px 12px; background: #0b5; color: #fff; text-decoration: none; border-radius: 4px; }
+    .actions a { margin-right: 8px; }
+  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+</head>
+<body>
+  <h1>Facturas</h1>
+  <p><a class="button" href="{% url 'facturas:create' %}">Nueva Factura</a></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Número</th>
+        <th>Fecha</th>
+        <th>Cliente</th>
+        <th>Bodega</th>
+        <th>Estado</th>
+        <th>Total</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for f in object_list %}
+      <tr>
+        <td>{{ f.number }}</td>
+        <td>{{ f.date|date:'Y-m-d H:i' }}</td>
+        <td>{{ f.customer }}</td>
+        <td>{{ f.warehouse }}</td>
+        <td>{{ f.get_status_display }}</td>
+        <td>{{ f.total }}</td>
+        <td class="actions">
+          <a href="{% url 'facturas:update' f.pk %}">Editar</a>
+          <a href="{% url 'facturas:delete' f.pk %}">Eliminar</a>
+          <a href="{% url 'facturas:print' f.pk %}">Imprimir</a>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="7">No hay facturas.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</body>
+</html>
+
+

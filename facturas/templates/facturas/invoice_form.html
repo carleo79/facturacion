@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>{% if object %}Editar{% else %}Nueva{% endif %} Factura</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 24px; }
+    form { max-width: 720px; }
+    label { display: block; margin-top: 12px; font-weight: 600; }
+    input, select, textarea { width: 100%; padding: 8px; margin-top: 6px; }
+    .actions { margin-top: 16px; }
+    button, a.button { padding: 8px 12px; border: 0; border-radius: 4px; }
+    button { background: #0b5; color: #fff; }
+    a.button { background: #777; color: #fff; text-decoration: none; }
+  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+</head>
+<body>
+  <h1>{% if object %}Editar{% else %}Nueva{% endif %} Factura</h1>
+  <form method="post" id="invoice-form">
+    {% if form.non_field_errors %}
+      <div style="background:#fee; border:1px solid #f99; color:#700; padding:8px; margin-bottom:12px;">
+        {% for e in form.non_field_errors %}<div>{{ e }}</div>{% endfor %}
+      </div>
+    {% endif %}
+    {% if form.errors %}
+      <div style="background:#fff7e6; border:1px solid #ffcd7a; color:#664400; padding:8px; margin-bottom:12px;">
+        <strong>Corrige los siguientes errores:</strong>
+        <ul style="margin:6px 0 0 18px;">
+          {% for field, errors in form.errors.items %}
+            <li><strong>{{ field }}:</strong> {{ errors|join:', ' }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+    {% csrf_token %}
+    <fieldset>
+      <legend>Factura</legend>
+      <style>
+        .form-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+        .form-grid .field { display: flex; flex-direction: column; }
+        .field span.helptext { font-size: 12px; color: #666; }
+        @media (max-width: 900px) { .form-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
+        .field-full { grid-column: 1 / -1; }
+      </style>
+      <div class="form-grid">
+        <div class="field">
+          <label for="id_number">Número</label>
+          {{ form.number }}
+        </div>
+        <div class="field">
+          <label for="id_customer">Cliente</label>
+          {{ form.customer }}
+          <input type="text" id="customer-search" placeholder="Buscar cliente (código/nombre)" style="margin-top:6px; padding:6px;">
+        </div>
+        <div class="field">
+          <label for="id_warehouse">Bodega</label>
+          {{ form.warehouse }}
+        </div>
+        <div class="field">
+          <label for="id_currency">Moneda</label>
+          {{ form.currency }}
+        </div>
+        <div class="field">
+          <label for="id_status">Estado</label>
+          {{ form.status }}
+        </div>
+        <div class="field field-full">
+          <label for="id_notes">Notas</label>
+          {{ form.notes }}
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Ítems</legend>
+      {{ formset.management_form }}
+      {% if formset.non_form_errors %}
+        <div style="background:#fee; border:1px solid #f99; color:#700; padding:8px; margin-bottom:12px;">
+          {% for e in formset.non_form_errors %}<div>{{ e }}</div>{% endfor %}
+        </div>
+      {% endif %}
+      <table id="items-table" style="border-collapse: collapse; width: 100%;">
+        <thead>
+          <tr>
+            <th style="border:1px solid #ddd; padding:6px;">Producto</th>
+            <th style="border:1px solid #ddd; padding:6px;">Presentación</th>
+            <th style="border:1px solid #ddd; padding:6px;">SKU</th>
+            <th style="border:1px solid #ddd; padding:6px;">Nombre</th>
+            <th style="border:1px solid #ddd; padding:6px;">Cant.</th>
+            <th style="border:1px solid #ddd; padding:6px;">Unidad</th>
+            <th style="border:1px solid #ddd; padding:6px;">Precio</th>
+            <th style="border:1px solid #ddd; padding:6px;">Desc. Tipo</th>
+            <th style="border:1px solid #ddd; padding:6px;">Desc. Valor</th>
+            <th style="border:1px solid #ddd; padding:6px;">Importe</th>
+            <th style="border:1px solid #ddd; padding:6px;">Eliminar</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for f in formset %}
+          <tr class="item-row">
+            <td style="border:1px solid #ddd; padding:6px;">{{ f.product }}</td>
+            <td style="border:1px solid #ddd; padding:6px;">{{ f.presentation }}</td>
+            <td style="border:1px solid #ddd; padding:6px;">{{ f.sku }}</td>
+            <td style="border:1px solid #ddd; padding:6px;">{{ f.name }}</td>
+            <td style="border:1px solid #ddd; padding:6px;">{{ f.quantity }}</td>
+            <td style="border:1px solid #ddd; padding:6px;">{{ f.unit_of_measure }}</td>
+            <td style="border:1px solid #ddd; padding:6px;">{{ f.unit_price }}</td>
+            <td style="border:1px solid #ddd; padding:6px;">{{ f.discount_type }}</td>
+            <td style="border:1px solid #ddd; padding:6px;">{{ f.discount_value }}</td>
+            <td style="border:1px solid #ddd; padding:6px;">
+              <span class="row-total">0.00</span>
+            </td>
+            <td style="border:1px solid #ddd; padding:6px; text-align:center;">
+              {{ f.DELETE }}
+              <button type="button" class="btn-remove" onclick="removeRow(this)">✕</button>
+            </td>
+            {{ f.presentation_name }}
+            {{ f.description }}
+            {{ f.discount_reason }}
+            {{ f.batch_number }}
+            {{ f.serial_number }}
+            {{ f.expiration_date }}
+          </tr>
+          {% empty %}
+          {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="9" style="border:1px solid #ddd; padding:6px; text-align:right;">Subtotal</td>
+            <td id="items-subtotal" style="border:1px solid #ddd; padding:6px;">0.00</td>
+            <td style="border:1px solid #ddd; padding:6px;"></td>
+          </tr>
+          <tr>
+            <td colspan="9" style="border:1px solid #ddd; padding:6px; text-align:right;">Descuento</td>
+            <td id="items-discount" style="border:1px solid #ddd; padding:6px;">0.00</td>
+            <td style="border:1px solid #ddd; padding:6px;"></td>
+          </tr>
+          <tr>
+            <td colspan="9" style="border:1px solid #ddd; padding:6px; text-align:right;">Impuestos</td>
+            <td id="items-taxes" style="border:1px solid #ddd; padding:6px;">0.00</td>
+            <td style="border:1px solid #ddd; padding:6px;"></td>
+          </tr>
+          <tr>
+            <td colspan="9" style="border:1px solid #ddd; padding:6px; text-align:right; font-weight:600;">Total</td>
+            <td id="items-grand-total" style="border:1px solid #ddd; padding:6px; font-weight:600;">0.00</td>
+            <td style="border:1px solid #ddd; padding:6px;"></td>
+          </tr>
+        </tfoot>
+      </table>
+      <div style="margin-top:10px;">
+        <button type="button" id="btn-add-row">Añadir línea</button>
+      </div>
+      <template id="empty-form-template">
+        <tr class="item-row">
+          <td style="border:1px solid #ddd; padding:6px;">REPLACE_product</td>
+          <td style="border:1px solid #ddd; padding:6px;">REPLACE_presentation</td>
+          <td style="border:1px solid #ddd; padding:6px;">REPLACE_sku</td>
+          <td style="border:1px solid #ddd; padding:6px;">REPLACE_name</td>
+          <td style="border:1px solid #ddd; padding:6px;">REPLACE_quantity</td>
+          <td style="border:1px solid #ddd; padding:6px;">REPLACE_unit_of_measure</td>
+          <td style="border:1px solid #ddd; padding:6px;">REPLACE_unit_price</td>
+          <td style="border:1px solid #ddd; padding:6px;">REPLACE_discount_type</td>
+          <td style="border:1px solid #ddd; padding:6px;">REPLACE_discount_value</td>
+          <td style="border:1px solid #ddd; padding:6px;"><span class="row-total">0.00</span></td>
+          <td style="border:1px solid #ddd; padding:6px; text-align:center;">REPLACE_DELETE <button type="button" class="btn-remove" onclick="removeRow(this)">✕</button></td>
+          REPLACE_hidden_extras
+        </tr>
+      </template>
+      <div id="empty-form-holder" style="display:none;">
+        {{ formset.empty_form.id }}
+        {{ formset.empty_form.product }}
+        {{ formset.empty_form.presentation }}
+        {{ formset.empty_form.sku }}
+        {{ formset.empty_form.name }}
+        {{ formset.empty_form.quantity }}
+        {{ formset.empty_form.unit_of_measure }}
+        {{ formset.empty_form.unit_price }}
+        {{ formset.empty_form.discount_type }}
+        {{ formset.empty_form.discount_value }}
+        {{ formset.empty_form.DELETE }}
+        {{ formset.empty_form.presentation_name }}
+        {{ formset.empty_form.description }}
+        {{ formset.empty_form.discount_reason }}
+        {{ formset.empty_form.batch_number }}
+        {{ formset.empty_form.serial_number }}
+        {{ formset.empty_form.expiration_date }}
+      </div>
+    </fieldset>
+
+    <div class="actions">
+      <button type="submit">Guardar</button>
+      <a class="button" href="{% url 'facturas:list' %}">Cancelar</a>
+      {% if object %}
+      <a class="button" style="background:#555" href="{% url 'facturas:print' object.pk %}" target="_blank">Imprimir</a>
+      {% endif %}
+    </div>
+  </form>
+
+  <script>
+    (function(){
+      const addBtn = document.getElementById('btn-add-row');
+      const tableBody = document.querySelector('#items-table tbody');
+      // No cachear TOTAL_FORMS; resolverlo en cada click para máxima compatibilidad
+      const emptyTemplate = document.getElementById('empty-form-template');
+      const emptyHolder = document.getElementById('empty-form-holder');
+      const grandTotalEl = document.getElementById('items-grand-total');
+      const subtotalEl = document.getElementById('items-subtotal');
+      const discountEl = document.getElementById('items-discount');
+      const taxesEl = document.getElementById('items-taxes');
+
+      function extractFieldHtml(nameAttrEndsWith) {
+        const el = emptyHolder.querySelector(`[name$="${nameAttrEndsWith}"]`);
+        return el ? el.outerHTML : '';
+      }
+
+      function replaceAllStr(str, find, replace) {
+        return str.split(find).join(replace);
+      }
+
+      function buildRowHtml(index, prefix) {
+        const replace = (html) => {
+          let out = html || '';
+          out = replaceAllStr(out, `${prefix}-__prefix__`, `${prefix}-${index}`);
+          out = replaceAllStr(out, '__prefix__', index);
+          return out;
+        };
+
+        const cells = {
+          id: replace(extractFieldHtml('-id')),
+          product: replace(extractFieldHtml('-product')),
+          presentation: replace(extractFieldHtml('-presentation')),
+          sku: replace(extractFieldHtml('-sku')),
+          name: replace(extractFieldHtml('-name')),
+          quantity: replace(extractFieldHtml('-quantity')),
+          unit_of_measure: replace(extractFieldHtml('-unit_of_measure')),
+          unit_price: replace(extractFieldHtml('-unit_price')),
+          discount_type: replace(extractFieldHtml('-discount_type')),
+          discount_value: replace(extractFieldHtml('-discount_value')),
+          deleteField: replace(extractFieldHtml('-DELETE')),
+          extras: [
+            extractFieldHtml('-presentation_name'),
+            extractFieldHtml('-description'),
+            extractFieldHtml('-discount_reason'),
+            extractFieldHtml('-batch_number'),
+            extractFieldHtml('-serial_number'),
+            extractFieldHtml('-expiration_date'),
+          ].map(replace).join('\n')
+        };
+
+        let row = emptyTemplate.innerHTML
+          .replace('REPLACE_product', cells.product)
+          .replace('REPLACE_presentation', cells.presentation)
+          .replace('REPLACE_sku', cells.sku)
+          .replace('REPLACE_name', cells.name)
+          .replace('REPLACE_quantity', cells.quantity)
+          .replace('REPLACE_unit_of_measure', cells.unit_of_measure)
+          .replace('REPLACE_unit_price', cells.unit_price)
+          .replace('REPLACE_discount_type', cells.discount_type)
+          .replace('REPLACE_discount_value', cells.discount_value)
+          .replace('REPLACE_DELETE', cells.deleteField)
+          .replace('REPLACE_hidden_extras', cells.id + '\n' + cells.extras);
+        return row;
+      }
+
+      addBtn && addBtn.addEventListener('click', function(){
+        try {
+          const formEl = document.getElementById('invoice-form') || document;
+          const totalForms = formEl.querySelector("input[name$='-TOTAL_FORMS']");
+          if (!totalForms) { alert('No se pudo inicializar el formulario (TOTAL_FORMS). Recarga la página.'); return; }
+          const prefix = totalForms.name.replace(/-TOTAL_FORMS$/, '');
+          const idx = parseInt(totalForms.value || '0', 10);
+          const html = buildRowHtml(idx, prefix);
+          if (!html) { alert('No se pudo generar la fila (empty_form).'); return; }
+          const wrapper = document.createElement('tbody');
+          wrapper.innerHTML = html.trim();
+          const tr = wrapper.firstElementChild;
+          if (!tr) { alert('No se pudo construir la fila.'); return; }
+          tableBody.appendChild(tr);
+          totalForms.value = String(idx + 1);
+          bindRowEvents(tr);
+          recalcAll();
+        } catch (e) {
+          console.error(e);
+          alert('Ocurrió un error al añadir la línea. Revisa la consola.');
+        }
+      });
+
+      window.removeRow = function(btn){
+        const tr = btn.closest('tr');
+        if (!tr) return;
+        let del = tr.querySelector("input[type='checkbox'][name$='-DELETE']");
+        if (!del) {
+          // Crear campo DELETE oculto si no existe (para filas recién añadidas sin checkbox visible)
+          const anyInput = tr.querySelector('[name]');
+          if (anyInput && anyInput.name) {
+            const base = anyInput.name.replace(/-[^-]+$/, ''); // quita el último -campo
+            const delName = base + '-DELETE';
+            del = document.createElement('input');
+            del.type = 'checkbox';
+            del.name = delName;
+            del.style.display = 'none';
+            tr.appendChild(del);
+          }
+        }
+        if (del) {
+          del.checked = true;
+          tr.style.display = 'none';
+        } else {
+          tr.remove();
+        }
+        recalcAll();
+      }
+
+      function parseNum(v) {
+        const n = parseFloat((v || '').toString().replace(',', '.'));
+        return isNaN(n) ? 0 : n;
+      }
+
+      function calcRowTotal(tr) {
+        const qty = parseNum(tr.querySelector('[name$="-quantity"]').value);
+        const price = parseNum(tr.querySelector('[name$="-unit_price"]').value);
+        const discTypeEl = tr.querySelector('[name$="-discount_type"]');
+        const discVal = parseNum(tr.querySelector('[name$="-discount_value"]').value);
+        const subtotal = qty * price;
+        let discount = 0;
+        if (discTypeEl && discTypeEl.value === 'percentage') {
+          discount = subtotal * (discVal / 100);
+        } else if (discTypeEl && discTypeEl.value === 'fixed') {
+          discount = discVal;
+        }
+        const total = Math.max(subtotal - discount, 0);
+        const span = tr.querySelector('.row-total');
+        if (span) span.textContent = total.toFixed(2);
+        return { subtotal, discount, total };
+      }
+
+      function recalcAll() {
+        let sumSubtotal = 0;
+        let sumDiscount = 0;
+        let sumTotal = 0;
+        document.querySelectorAll('#items-table tbody tr.item-row').forEach(tr => {
+          const r = calcRowTotal(tr);
+          sumSubtotal += r.subtotal;
+          sumDiscount += r.discount;
+          sumTotal += r.total;
+        });
+        // Impuestos en cliente: 0 por ahora (se calculan en servidor si aplica)
+        const taxes = 0;
+        if (subtotalEl) subtotalEl.textContent = sumSubtotal.toFixed(2);
+        if (discountEl) discountEl.textContent = sumDiscount.toFixed(2);
+        if (taxesEl) taxesEl.textContent = taxes.toFixed(2);
+        if (grandTotalEl) grandTotalEl.textContent = (sumSubtotal - sumDiscount + taxes).toFixed(2);
+      }
+
+      async function fetchPresentation(presentationId) {
+        const url = `/productos/api/presentaciones/${presentationId}/`;
+        const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+        if (!res.ok) throw new Error('No se pudo obtener la presentación');
+        return await res.json();
+      }
+
+      function bindRowEvents(tr) {
+        ['-quantity','-unit_price','-discount_type','-discount_value'].forEach(suffix => {
+          const el = tr.querySelector(`[name$="${suffix}"]`);
+          el && el.addEventListener('input', recalcAll);
+          el && el.addEventListener('change', recalcAll);
+        });
+        // Validaciones mínimas
+        const qtyEl = tr.querySelector('[name$="-quantity"]');
+        const priceEl = tr.querySelector('[name$="-unit_price"]');
+        const discValEl = tr.querySelector('[name$="-discount_value"]');
+        if (qtyEl) { qtyEl.setAttribute('min','0'); qtyEl.setAttribute('step','0.001'); qtyEl.addEventListener('blur', () => { if (parseNum(qtyEl.value) < 0) { qtyEl.value = '0'; recalcAll(); } }); }
+        if (priceEl) { priceEl.setAttribute('min','0.01'); priceEl.setAttribute('step','0.01'); priceEl.addEventListener('blur', () => { if (parseNum(priceEl.value) <= 0) { priceEl.value = '0.01'; recalcAll(); } }); }
+        if (discValEl) { discValEl.setAttribute('min','0'); discValEl.setAttribute('step','0.01'); discValEl.addEventListener('blur', () => { if (parseNum(discValEl.value) < 0) { discValEl.value = '0'; recalcAll(); } }); }
+        // Autocompletar desde Presentación
+        const pres = tr.querySelector('[name$="-presentation"]');
+        const name = tr.querySelector('[name$="-name"]');
+        const sku = tr.querySelector('[name$="-sku"]');
+        const unitPrice = tr.querySelector('[name$="-unit_price"]');
+        pres && pres.addEventListener('change', async function(){
+          const val = pres.value;
+          if (!val) return;
+          try {
+            const data = await fetchPresentation(val);
+            if (sku) sku.value = data.sku || sku.value;
+            if (name && !name.value) name.value = data.name || data.product_name || name.value;
+            if (unitPrice && (!unitPrice.value || parseNum(unitPrice.value) === 0)) unitPrice.value = data.unit_price;
+            recalcAll();
+          } catch (e) {
+            console.warn(e);
+          }
+        });
+      }
+
+      // Bind eventos existentes
+      document.querySelectorAll('#items-table tbody tr.item-row').forEach(tr => bindRowEvents(tr));
+      recalcAll();
+
+      // ========== Búsqueda de clientes (debounce + repoblar select) ==========
+      const searchInput = document.getElementById('customer-search');
+      const customerSelect = document.getElementById('id_customer');
+      let tmr;
+      async function fetchClientes(q) {
+        const url = `/clientes/api/buscar/?q=${encodeURIComponent(q||'')}`;
+        const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+        if (!res.ok) return { results: [] };
+        return await res.json();
+      }
+      function repopulateSelect(select, options) {
+        const current = select.value;
+        select.innerHTML = '';
+        const emptyOpt = document.createElement('option');
+        emptyOpt.value = '';
+        emptyOpt.textContent = '— seleccionar —';
+        select.appendChild(emptyOpt);
+        options.forEach(o => {
+          const opt = document.createElement('option');
+          opt.value = o.id;
+          opt.textContent = o.text;
+          select.appendChild(opt);
+        });
+        // Mantener selección si aún está en resultados
+        if ([...select.options].some(o => o.value === current)) {
+          select.value = current;
+        }
+      }
+      if (searchInput && customerSelect) {
+        searchInput.addEventListener('input', function(){
+          clearTimeout(tmr);
+          tmr = setTimeout(async () => {
+            try {
+              const data = await fetchClientes(searchInput.value);
+              repopulateSelect(customerSelect, data.results || []);
+            } catch (e) { console.warn(e); }
+          }, 300);
+        });
+      }
+    })();
+  </script>
+</body>
+</html>
+
+

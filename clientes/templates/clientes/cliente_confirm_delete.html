@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Eliminar Cliente</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 24px; }
+    .actions { margin-top: 16px; }
+    button, a.button { padding: 8px 12px; border: 0; border-radius: 4px; }
+    button { background: #c00; color: #fff; }
+    a.button { background: #777; color: #fff; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <h1>Eliminar Cliente</h1>
+  <p>¿Confirmas eliminar al cliente {{ object }}?</p>
+  <form method="post">
+    {% csrf_token %}
+    <div class="actions">
+      <button type="submit">Sí, eliminar</button>
+      <a class="button" href="{% url 'clientes:list' %}">Cancelar</a>
+    </div>
+  </form>
+</body>
+</html>
+
+

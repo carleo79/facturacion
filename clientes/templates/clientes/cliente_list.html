@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Clientes</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 24px; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ddd; padding: 8px; }
+    th { background: #f5f5f5; text-align: left; }
+    a.button { display: inline-block; padding: 8px 12px; background: #0b5; color: #fff; text-decoration: none; border-radius: 4px; }
+    .actions a { margin-right: 8px; }
+  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  {% csrf_token %}
+</head>
+<body>
+  <h1>Clientes</h1>
+  <p><a class="button" href="{% url 'clientes:create' %}">Nuevo Cliente</a></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Código</th>
+        <th>Nombre</th>
+        <th>Tipo</th>
+        <th>Teléfono</th>
+        <th>Email</th>
+        <th>Estado</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for c in object_list %}
+      <tr>
+        <td>{{ c.codigo }}</td>
+        <td>{{ c.nombre }}</td>
+        <td>{{ c.get_tipo_display }}</td>
+        <td>{{ c.telefono }}</td>
+        <td>{{ c.email }}</td>
+        <td>{{ c.get_estado_display }}</td>
+        <td class="actions">
+          <a href="{% url 'clientes:update' c.pk %}">Editar</a>
+          <a href="{% url 'clientes:delete' c.pk %}">Eliminar</a>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="7">No hay clientes.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</body>
+</html>
+
+
