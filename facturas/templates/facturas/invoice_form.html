@@ -52,7 +52,11 @@
         <div class="field">
           <label for="id_customer">Cliente</label>
           {{ form.customer }}
-          <input type="text" id="customer-search" placeholder="Buscar cliente (código/nombre)" style="margin-top:6px; padding:6px;">
+          <div style="margin-top:6px; display:flex; gap:8px; align-items:center;">
+            <input type="text" id="customer-search" placeholder="Buscar cliente (código/nombre)" style="flex:1; padding:6px; margin-top:0;">
+            <a href="{% url 'clientes:create' %}" target="_blank" class="button" style="background:#007bff; font-size:12px; padding:6px 10px; width:auto; white-space:nowrap;">+ Nuevo Cliente</a>
+          </div>
+          <span class="helptext">Si creas uno nuevo, búscalo aquí después de guardarlo.</span>
         </div>
         <div class="field">
           <label for="id_warehouse">Bodega</label>
